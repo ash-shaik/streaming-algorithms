@@ -1,7 +1,10 @@
 package kafka-integration
 
+import java.sql.Timestamp
 import java.util
 
+import io.circe.Decoder.Result
+import io.circe.{Decoder, Encoder, HCursor, Json}
 import org.scalacheck.Gen
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -35,7 +38,7 @@ object ClickStreamProducer {
   )
 
   val kafkaTopic = "clickstream-analysis"
-  val delay = 1000
+  val delay = 1
 
   val kafkaHashMap = new util.HashMap[String, Object]()
   kafkaParams.foreach { pair =>
@@ -47,7 +50,15 @@ object ClickStreamProducer {
   val producer = new KafkaProducer[Long, String](kafkaHashMap)
 
 
-  val batchSize = 1000
+  val batchSize = 1
+
+  implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
+    //Spark represents interprets in seconds not milliseconds. Dividing the input by 1000
+    override def apply(a: Timestamp): Json = Encoder.encodeLong.apply(a.getTime/1000)
+
+    override def apply(c: HCursor): Result[Timestamp] = Decoder.decodeLong.map(s => new Timestamp(s)).apply(c)
+  }
+
 
   def genBatchClicks() =
     for {
@@ -56,8 +67,8 @@ object ClickStreamProducer {
     } yield dataBatch
 
   def writeToKafka(): Unit = {
-    genBatchClicks().sample.get.foreach { json =>
-      //println(json)
+      genBatchClicks().sample.get.foreach { json =>
+      println(json)
       val record = new ProducerRecord(kafkaTopic, System.currentTimeMillis(), json)
       producer.send(record)
     }

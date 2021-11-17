@@ -1,6 +1,6 @@
 package kafka-integration
 
-import model._
+import java.sql.Timestamp
 
 import org.scalacheck.Gen
 import java.time.LocalDateTime
@@ -24,7 +24,7 @@ object clickStreamAG {
       user_idg <- Gen.choose(1, 10000)
       deviceg <- Gen.oneOf("mobile", "computer", "tablet")
       client_eventg <- Gen.oneOf("steps", "sleep", "food", "heart")
-      client_timestampg <- myTimestamp
+      client_timestampg <- getCurrentTimestamp
     } yield Clickstream(
       user_id = user_idg,
       device = deviceg,
@@ -43,13 +43,26 @@ object clickStreamAG {
     generateClickstreamData()
   }
 
-  def localDateTimeGen(
-                        rangeStart: Long
-                        , rangeEnd: Long
-                      ): Gen[LocalDate] = {
+
+  def getCurrentTimestamp(): Gen[Timestamp] = {
+    Gen.const(new Timestamp(System.currentTimeMillis()))
+  }
+
+  def getSampleTimestamp(): Gen[Timestamp] ={
+
+    val offset = Timestamp.valueOf("2021-11-01 00:00:00").getTime
+    val end = System.currentTimeMillis()
+    val diff = end - offset + 1
+
+    Gen.const(new Timestamp(offset + (Math.random * diff).toLong))
+
+  }
+
+  def localDateTimeGen(rangeStart: Long, rangeEnd: Long): Gen[Timestamp] = {
     Gen.const(Gen.choose(rangeStart, rangeEnd)
-      .map(i => LocalDateTime.ofEpochSecond(i, 0, UTC))
-      .sample.get.toLocalDate)
+      .map(i => new Timestamp(i))
+      .sample.get
+    )
   }
 
 }
