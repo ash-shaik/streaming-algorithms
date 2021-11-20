@@ -21,13 +21,15 @@ object clickStreamAG {
     }
 
     val genClickStreamSample: Gen[Clickstream] = for {
-      user_idg <- Gen.choose(1, 10000)
+      user_idg <- Gen.choose(1, 1000)
       deviceg <- Gen.oneOf("mobile", "computer", "tablet")
+      locationg <- Gen.oneOf("asia", "europe", "americas")
       client_eventg <- Gen.oneOf("steps", "sleep", "food", "heart")
       client_timestampg <- getCurrentTimestamp
     } yield Clickstream(
       user_id = user_idg,
       device = deviceg,
+      click_location = locationg,
       client_event = client_eventg,
       client_timestamp = client_timestampg
     )
