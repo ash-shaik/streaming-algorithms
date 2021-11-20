@@ -1,4 +1,4 @@
-package kafka-integration
+package use-cases
 
 import model.{Clickstream, User}
 import org.apache.spark.sql.functions.{col, from_json}

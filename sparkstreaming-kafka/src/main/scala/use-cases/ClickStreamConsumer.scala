@@ -1,4 +1,4 @@
-package kafka-integration
+package use-cases
 
 import model.Clickstream
 import org.apache.spark.sql.{DataFrame, SparkSession}

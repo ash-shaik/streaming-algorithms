@@ -1,4 +1,4 @@
-package kafka-integration
+package use-cases
 
 import java.sql.Timestamp
 
