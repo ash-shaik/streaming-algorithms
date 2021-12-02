@@ -27,7 +27,36 @@ Building Blocks:
 """
 
 """
-Bloom Filter - Data Structure used by a applications to store set membership information.
-Trade Off - Possible False Positives
+Bloom Filter - Data Structure used by a applications to store set membership information
+ (Test if an element is part of a large set, without needing to store all elements of the set).
+Trade Off - Accuracy, Possible False Positives
 The size of the data strucure allows us to control the false positive rate.
 """
+
+import mmh3
+from bitarray import bitarray
+
+
+class BloomSet(object):
+
+    def __init__(self, m, seeds):
+        self.m = m
+        self.size_used = 0
+        self.num_hashes = len(seeds)
+        # is an array of bits, set to zero initially.
+        self.__bits = bitarray(self.m)
+        self.__bits.setall(0)
+
+    def add(self, item):
+        if item not in self and self.size_used < self.m:
+            for i in range(self.num_hashes):
+                index = mmh3.hash(item, i) % self.m
+                self.__bits[index] = 1
+            self.size_used += 1
+
+    def contains(self, item):
+        for i in range(self.num_hashes):
+            index = mmh3.hash(item, i) % self.m
+            if not self.__bits[index]:
+                return False
+            return True
