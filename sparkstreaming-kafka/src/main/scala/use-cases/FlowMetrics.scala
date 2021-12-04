@@ -1,6 +1,6 @@
 
 import org.slf4j.LoggerFactory
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions.{avg, col, datediff}
 
 val PROJECT_NAME: String = "your_project_name"
@@ -44,14 +44,30 @@ class FlowMetricsApp {
 
     //Unique Projects
     val uniqueProjectsDF = valueStreamDF.select("project").distinct()
+    uniqueProjectsDF.show()
 
 
     val total = valueStreamDF.count()
     //Count by flow item type - Flow Distribution % of Total .
     valueStreamDF.groupBy(col("flow_item")).count()
       .withColumnRenamed("count", "count_per_item_type")
-      .withColumn("percentage_of_total", (col("count_per_item_type")/total)*100)
+      .withColumn("percentage_of_total", col("count_per_item_type")./(total)*100)
       .sort(col("percentage_of_total").desc_nulls_last)
+
+    // Flow Velocity - Number of flow items completed in last 3 months.
+    val completedInLast3MonsDF = valueStreamDF.filter(
+      col("closed_at").between("2021-09-01", "2021-12-01") &&
+      col("status").equalTo("completed")
+      )
+
+
+    val flowVelocityDF = completedInLast3MonsDF.groupBy(col("flow_item")).count()
+      .withColumnRenamed("count", "countPerItemType")
+      .sort("flow_item")
+    flowVelocityDF.show()
+
+
+
 
   }
 
