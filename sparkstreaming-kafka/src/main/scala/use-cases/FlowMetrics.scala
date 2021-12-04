@@ -27,12 +27,13 @@ class FlowMetricsApp {
     log.debug("Num records in valueStream : {}", valueStreamDF.count())
 
     // using spark sql.
-    val flowTimeSQL: String = "SELECT project, flow_item, AVG(DATE_DIFF(closed_at, started_at)) as avg_flow_time_days ".+("FROM flow_item_summary GROUP BY project, flow_item")
+    val flowTimeSQL: String = "SELECT item_id, project, flow_item, AVG(DATE_DIFF(closed_at, started_at)) as avg_flow_time_days ".+("FROM flow_item_summary GROUP BY project, flow_item")
 
     val flowTimeDF: _root_.org.apache.spark.sql.DataFrame = spark.sql(flowTimeSQL)
     flowTimeDF.show(20)
 
     //Using dataframe API
+    // Average time to compete a flow.
     val avgFlowTimeDF: _root_.org.apache.spark.sql.DataFrame = valueStreamDF.withColumn("flow_time_days"
       , datediff(col("closed_at"), col("started_at")))
       .groupBy(col("project"), col("flow_item")).agg(
@@ -40,6 +41,17 @@ class FlowMetricsApp {
     )
 
     avgFlowTimeDF.show(20)
+
+    //Unique Projects
+    val uniqueProjectsDF = valueStreamDF.select("project").distinct()
+
+
+    val total = valueStreamDF.count()
+    //Count by flow item type - Flow Distribution % of Total .
+    valueStreamDF.groupBy(col("flow_item")).count()
+      .withColumnRenamed("count", "count_per_item_type")
+      .withColumn("percentage_of_total", (col("count_per_item_type")/total)*100)
+      .sort(col("percentage_of_total").desc_nulls_last)
 
   }
 
