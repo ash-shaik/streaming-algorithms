@@ -34,8 +34,14 @@ class FlowMetricsApp {
     /*
       Schema -
       Table : - flow_item_summary
-      flow_item, flow_item_type, status, started_at, closed_at, days_in_lead, assignee, project
-
+      -- flow_item : integer (nullable = false)
+      -- flow_item_type : string (nullable = false)
+      -- status : string (nullable = false)
+      -- started_at : datetime (nullable = false)
+      -- closed_at : datetime (nullable = true)
+      -- days_in_lead : integer (nullable = true)
+      -- assignee : string (nullable = true)
+      -- project : string (nullable = false)
      */
 
     log.debug("Num records in valueStream : {}", valueStreamSummaryDF.count())
