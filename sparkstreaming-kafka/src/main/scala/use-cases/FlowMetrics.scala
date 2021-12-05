@@ -1,7 +1,8 @@
 
 import org.slf4j.LoggerFactory
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{avg, col, datediff, current_date, months_between, lit}
+import org.apache.spark.sql.functions.{avg, col, datediff, current_date, months_between
+  , lit, date_format, desc}
 
 val PROJECT_NAME: String = "your_project_name"
 
@@ -34,10 +35,11 @@ class FlowMetricsApp {
     /*
       Schema -
       Table : - flow_item_summary
-      -- flow_item : integer (nullable = false)
+      -- flow_item : long (nullable = false)
       -- flow_item_type : string (nullable = false)
       -- status : string (nullable = false)
-      -- started_at : datetime (nullable = false)
+      -- created_at : datetime (nullable = false)
+      -- started_at : datetime (nullable = true)
       -- closed_at : datetime (nullable = true)
       -- days_in_lead : integer (nullable = true)
       -- assignee : string (nullable = true)
@@ -117,6 +119,19 @@ class FlowMetricsApp {
       , avgLeadTimeDF.apply("flow_item").===(avgFlowTimeDF.apply("flow_item")), "inner")
       .withColumn("flow_efficiency"
         , col("days_in_lead")./(col("flow_time_days")).*(100)).show()
+
+
+    // Average flow time by creation year
+    // If the pivoting column has a lot of distinct values, you can selectively choose which values
+    // to generate the aggregations for.
+    // Specifying a list of distinct values for the pivot column speeds up the pivoting process.
+
+    valueStreamSummaryDF
+      .withColumn("year_created", date_format(col("created_at"), "y"))
+      .groupBy(col("year_created"))
+        .pivot(col("project"), Seq("Proj A", "Proj R" , "Proj X"))
+        .avg("flow_time_days").as("avg_flow_time_in_days")
+      .orderBy(desc("year_created")).show(5)
 
     spark.stop()
 
