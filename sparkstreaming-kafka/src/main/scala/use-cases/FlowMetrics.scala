@@ -24,13 +24,13 @@ class FlowMetricsApp {
       .getOrCreate()
 
     // Read Dataset from BigQuery
-    val valueStreamDF: org.apache.spark.sql.DataFrame = spark.read.format("bigquery")
+    val valueStreamSummaryDF: org.apache.spark.sql.DataFrame = spark.read.format("bigquery")
       .option("credentialsFile", "src/main/resources/key/{PROJECT_NAME}.json")
       .option("table", "flow_models:item_summary")
       .load()
       .cache()
 
-    valueStreamDF.createOrReplaceTempView("flow_item_summary")
+    valueStreamSummaryDF.createOrReplaceTempView("flow_item_summary")
     /*
       Schema -
       Table : - flow_item_summary
@@ -38,7 +38,7 @@ class FlowMetricsApp {
 
      */
 
-    log.debug("Num records in valueStream : {}", valueStreamDF.count())
+    log.debug("Num records in valueStream : {}", valueStreamSummaryDF.count())
 
     // Flow Time: using spark sql.
     val flowTimeSQL: String = {
@@ -50,7 +50,7 @@ class FlowMetricsApp {
 
     // Using Data frame API
     // Flow Time : Average time to compete a flow in days.
-    val avgFlowTimeDF: org.apache.spark.sql.DataFrame = valueStreamDF.withColumn("flow_time_days"
+    val avgFlowTimeDF: org.apache.spark.sql.DataFrame = valueStreamSummaryDF.withColumn("flow_time_days"
       , datediff(col("closed_at"), col("started_at")))
       .groupBy(col("project"), col("flow_item")).agg(
       avg("flow_time_days")
@@ -60,13 +60,13 @@ class FlowMetricsApp {
 
     //Unique Projects
     val uniqueProjectsDF: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] =
-      valueStreamDF.select("project").distinct()
+      valueStreamSummaryDF.select("project").distinct()
     uniqueProjectsDF.show()
 
 
-    val total: Long = valueStreamDF.count()
+    val total: Long = valueStreamSummaryDF.count()
     // Flow Distribution : Count by flow item type -  % of Total .
-    valueStreamDF.groupBy(col("flow_item")).count()
+    valueStreamSummaryDF.groupBy(col("flow_item")).count()
       .withColumnRenamed("count", "count_per_item_type")
       .withColumn("percentage_of_total", col("count_per_item_type")./(total).*(100))
       .sort(col("percentage_of_total").desc_nulls_last)
@@ -79,7 +79,7 @@ class FlowMetricsApp {
       )*/
 
     val completedInLast3MonsDF: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] =
-      valueStreamDF.withColumn("current_date", current_date())
+      valueStreamSummaryDF.withColumn("current_date", current_date())
       .withColumn("monthsDiff", months_between(col("closed_at"), col("current_date")))
       .filter(
       col("monthsDiff").<=(lit(3))
@@ -93,7 +93,7 @@ class FlowMetricsApp {
     flowVelocityDF.show()
 
     //Flow Load : Number of items currently in progress
-    val currentlyInProgressDF: org.apache.spark.sql.DataFrame = valueStreamDF.
+    val currentlyInProgressDF: org.apache.spark.sql.DataFrame = valueStreamSummaryDF.
       filter(col("status").equalTo("in_progress")
     ).groupBy(col("flow_item")).count()
 
@@ -102,7 +102,7 @@ class FlowMetricsApp {
     //Flow Efficiency : Ratio of Avg Lead Time to Avg Flow Time in days
 
     val avgLeadTimeDF: org.apache.spark.sql.DataFrame =
-      valueStreamDF.groupBy(col("flow_item"))
+      valueStreamSummaryDF.groupBy(col("flow_item"))
       .agg(avg("days_in_lead").alias("avg_lead_time"))
 
 
