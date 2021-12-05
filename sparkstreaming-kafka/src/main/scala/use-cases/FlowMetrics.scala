@@ -59,7 +59,7 @@ class FlowMetricsApp {
     val avgFlowTimeDF: org.apache.spark.sql.DataFrame = valueStreamSummaryDF.withColumn("flow_time_days"
       , datediff(col("closed_at"), col("started_at")))
       .groupBy(col("project"), col("flow_item")).agg(
-      avg("flow_time_days")
+      avg("flow_time_days").as("flow_time_days")
     )
 
     avgFlowTimeDF.show(20)
@@ -70,6 +70,7 @@ class FlowMetricsApp {
     uniqueProjectsDF.show()
 
 
+    // Count is an action - and its returns a value immediately.
     val total: Long = valueStreamSummaryDF.count()
     // Flow Distribution : Count by flow item type -  % of Total .
     valueStreamSummaryDF.groupBy(col("flow_item")).count()
@@ -109,7 +110,7 @@ class FlowMetricsApp {
 
     val avgLeadTimeDF: org.apache.spark.sql.DataFrame =
       valueStreamSummaryDF.groupBy(col("flow_item"))
-      .agg(avg("days_in_lead").alias("avg_lead_time"))
+      .agg(avg("days_in_lead").as("avg_lead_time"))
 
 
     avgLeadTimeDF.join(avgFlowTimeDF
