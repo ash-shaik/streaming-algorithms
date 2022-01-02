@@ -2,6 +2,9 @@ from collections import deque
 
 
 class Memoize:
+    """
+    Decorator Class for caching recent *capacity* results.
+    """
     def __init__(self, user_function, capacity=2):
         self.fn = user_function
         self.dict = {}

@@ -22,6 +22,10 @@ def fibonacci(n):
 
 
 def test_without_memo():
+    """
+    Example without memo
+    :return:
+    """
     start = time.time()
     result = fibonacci(35)
     time_taken = time.time() - start
@@ -30,6 +34,11 @@ def test_without_memo():
 
 
 def test_with_memo(n):
+    """
+    Example with memo
+    :param n:
+    :return:
+    """
     start = time.time()
     result = fibonacci_m(n)
     time_taken = time.time() - start
