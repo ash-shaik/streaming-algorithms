@@ -1,0 +1,4 @@
+lxml
+nltk
+pandas
+bs4
