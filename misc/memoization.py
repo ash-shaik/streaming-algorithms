@@ -42,11 +42,11 @@ def test_with_memo(n):
     start = time.time()
     result = fibonacci_m(n)
     time_taken = time.time() - start
-    print(result)
+    print("fib({}) = {}".format(n, result))
     print('Time taken ', time_taken, ' seconds')
 
 
-def memoize(capacity=2):
+def memoize(capacity=20):
     """
     A wrapper method to memoize the decorated function.
     :param capacity:
@@ -59,7 +59,7 @@ def memoize(capacity=2):
     return _memoizer
 
 
-@memoize(10)
+@memoize(20)
 def fibonacci_m(n):
     if n == 0:
         return 0
@@ -81,4 +81,8 @@ if __name__ == '__main__':
 
     print("With Memo")
     test_with_memo(35)
+    test_with_memo(34)
+    test_with_memo(30)
+    test_with_memo(15)
+    test_with_memo(14)
     test_with_memo(36)
