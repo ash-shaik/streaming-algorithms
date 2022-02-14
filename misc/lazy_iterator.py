@@ -12,8 +12,7 @@ def sequence_enumerator(my_data):
     As soon as "next" is called again on the generator object,
     the generator function will resume execution right after
     the yield statement in the code, where the last call is made.
-    The execution will continue in the state in which the generator
-    was left after the last yield
+    The execution will continue in the state in which the generator was left after the last yield
     :param my_data:
     :return:
     """
