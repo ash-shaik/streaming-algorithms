@@ -15,6 +15,8 @@ def sequence_enumerator(my_data):
     the yield statement in the code, where the last call is made.
     The execution will continue in the state in which the generator
     was left after the last yield
+    In generator functions, we don’t need to explicitly raise StopIteration.
+    That happens automatically when the generator reaches the end of the function.
     :param my_data:
     :return:
     """
@@ -27,10 +29,12 @@ def sequence_enumerator(my_data):
 def num_listings_received(file_name):
     """
     This is another use case where we read a large file, work through it iteratively
-    and return its required metric without overwhelming the system.
+    and return its required metric without overwhelming the system. This also will work with
+    streaming data.
     :param file_name:
     :return:
     """
+    # file objects are iterators. each iteration returns next
     listings = (listing for listing in open(file_name))
     listing_item = (list_ing.rstrip().split(",") for list_ing in listings)
     columns = next(listing_item)
